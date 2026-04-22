@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adlovia — Scale to $100k/mo on Autopilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --gold:#c99a5b;
+  --gold2:#e4bc80;
+  --gold-glow:rgba(201,154,91,0.18);
+  --black:#08080c;
+  --black2:#0f0f16;
+  --black3:#16161f;
+  --white:#f7f3ec;
+  --muted:rgba(247,243,236,0.5);
+  --muted2:rgba(247,243,236,0.2);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:'Inter',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:2px;}
+::-webkit-scrollbar-thumb{background:var(--gold);}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:26px 72px;
+  transition:all 0.5s;
+}
+nav.stuck{
+  background:rgba(8,8,12,0.95);
+  backdrop-filter:blur(24px);
+  padding:18px 72px;
+  border-bottom:1px solid rgba(201,154,91,0.07);
+}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.logo-mark{width:34px;height:34px;}
+.logo-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:0.08em;color:var(--white);}
+.logo-name span{color:var(--gold);}
+.nav-links{display:flex;align-items:center;gap:36px;}
+.nav-link{font-size:11px;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.3s;}
+.nav-link:hover{color:var(--gold);}
+.nav-btn{
+  background:transparent;
+  border:1px solid rgba(201,154,91,0.4);
+  color:var(--gold);
+  font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:600;
+  letter-spacing:0.18em;text-transform:uppercase;
+  padding:12px 28px;cursor:pointer;
+  text-decoration:none;transition:all 0.3s;
+}
+.nav-btn:hover{background:var(--gold);color:var(--black);}
+
+/* ── HERO ── */
+#hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:120px 40px 80px;
+  overflow:hidden;
+}
+#canvas3d{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  pointer-events:none;z-index:0;
+}
+.hero-inner{position:relative;z-index:2;}
+
+.hero-tag{
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid rgba(201,154,91,0.25);
+  padding:9px 22px;margin-bottom:42px;
+  font-size:10px;font-weight:600;
+  letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--gold);
+  opacity:0;animation:up 0.9s ease 0.3s forwards;
+}
+.tag-dot{width:5px;height:5px;background:var(--gold);border-radius:50%;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.hero-h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(56px,8.5vw,110px);
+  font-weight:300;
+  line-height:0.95;
+  letter-spacing:-0.02em;
+  margin-bottom:32px;
+  opacity:0;animation:up 1s ease 0.5s forwards;
+}
+.hero-h1 .em{font-style:italic;color:var(--gold);}
+.hero-h1 .thin{font-weight:300;}
+
+.hero-sub{
+  font-size:16px;font-weight:300;
+  color:var(--muted);line-height:1.85;
+  max-width:560px;margin:0 auto 52px;
+  opacity:0;animation:up 1s ease 0.7s forwards;
+}
+
+.hero-ctas{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:up 1s ease 0.9s forwards;
+}
+.cta-main{
+  background:var(--gold);color:var(--black);
+  font-family:'Inter',sans-serif;font-weight:700;
+  font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
+  padding:18px 44px;border:none;cursor:pointer;
+  text-decoration:none;display:inline-block;
+  transition:all 0.35s;
+}
+.cta-main:hover{background:var(--gold2);box-shadow:0 20px 60px rgba(201,154,91,0.35);transform:translateY(-3px);}
+.cta-ghost{
+  background:transparent;color:var(--white);
+  font-family:'Inter',sans-serif;font-weight:500;
+  font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
+  padding:18px 44px;border:1px solid rgba(255,255,255,0.12);
+  cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.3s;
+}
+.cta-ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+.scroll-hint{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  opacity:0;animation:up 1s ease 1.2s forwards;
+}
+.scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--gold),transparent);}
+.scroll-text{font-size:9px;font-weight:600;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted2);}
+
+@keyframes up{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── DIVIDER ── */
+.div{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(201,154,91,0.15),transparent);}
+
+/* ── ABOUT ── */
+#about{
+  padding:130px 72px;max-width:1300px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1.2fr;gap:100px;align-items:center;
+}
+.sec-tag{
+  display:flex;align-items:center;gap:12px;
+  font-size:9px;font-weight:700;letter-spacing:0.4em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:24px;
+}
+.sec-tag::before{content:'';width:28px;height:1px;background:var(--gold);}
+.sec-h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(36px,4.5vw,58px);
+  font-weight:300;line-height:1.1;margin-bottom:24px;
+}
+.sec-h2 em{font-style:italic;color:var(--gold);}
+.about-p{font-size:15px;font-weight:300;color:var(--muted);line-height:1.9;margin-bottom:18px;}
+.about-p strong{color:var(--gold);font-weight:500;}
+
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(201,154,91,0.08);}
+.metric-box{
+  background:var(--black2);
+  padding:36px 30px;
+  transition:background 0.3s;
+}
+.metric-box:hover{background:var(--black3);}
+.metric-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:46px;font-weight:600;color:var(--gold);
+  line-height:1;margin-bottom:8px;
+}
+.metric-label{font-size:11px;font-weight:400;color:var(--muted);line-height:1.5;letter-spacing:0.03em;}
+
+/* ── CONTRAST ENGINE ── */
+#contrast{padding:130px 72px;max-width:1300px;margin:0 auto;}
+.contrast-header{margin-bottom:80px;}
+
+.contrast-item{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2px;background:rgba(201,154,91,0.06);
+  margin-bottom:2px;
+}
+.contrast-item:last-child{margin-bottom:0;}
+
+.contrast-half{
+  padding:64px 56px;
+  position:relative;overflow:hidden;
+  transition:background 0.4s;
+}
+.contrast-half.problem{background:var(--black2);}
+.contrast-half.solution{background:var(--black3);}
+.contrast-half:hover{background:#1c1c28;}
+
+.contrast-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:72px;font-weight:300;
+  color:rgba(201,154,91,0.06);
+  position:absolute;top:20px;right:28px;
+  line-height:1;
+}
+.contrast-badge{
+  display:inline-block;
+  font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;
+  padding:5px 14px;margin-bottom:24px;
+}
+.contrast-badge.prob-badge{
+  border:1px solid rgba(255,80,80,0.2);
+  color:rgba(255,120,120,0.7);
+  background:rgba(255,80,80,0.05);
+}
+.contrast-badge.sol-badge{
+  border:1px solid rgba(201,154,91,0.25);
+  color:var(--gold);
+  background:rgba(201,154,91,0.06);
+}
+.contrast-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(22px,2.5vw,32px);
+  font-weight:400;line-height:1.25;margin-bottom:16px;
+}
+.contrast-body{font-size:13px;font-weight:300;color:var(--muted);line-height:1.85;}
+
+/* ── REVIEWS ── */
+#reviews{padding:130px 72px;max-width:1300px;margin:0 auto;}
+.reviews-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:20px;margin-top:64px;
+}
+.rev{
+  background:var(--black2);
+  border:1px solid rgba(201,154,91,0.07);
+  padding:42px 34px;
+  position:relative;transition:all 0.35s;
+}
+.rev:hover{border-color:rgba(201,154,91,0.25);transform:translateY(-5px);}
+.rev::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;transition:opacity 0.35s;
+}
+.rev:hover::before{opacity:1;}
+.rev-stars{display:flex;gap:3px;margin-bottom:22px;}
+.rev-star{width:10px;height:10px;background:var(--gold);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.rev-q{font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--gold);opacity:0.25;line-height:0.8;margin-bottom:14px;}
+.rev-text{font-size:14px;font-weight:300;color:var(--muted);line-height:1.85;font-style:italic;margin-bottom:28px;}
+.rev-author{font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;}
+.rev-clinic{font-size:11px;color:var(--gold);}
+.rev-result{margin-top:20px;padding-top:16px;border-top:1px solid rgba(201,154,91,0.1);font-size:11px;font-weight:600;color:#5eead4;letter-spacing:0.06em;}
+
+/* ── CONTACT ── */
+#contact{
+  padding:130px 72px;max-width:860px;margin:0 auto;text-align:center;
+}
+.contact-perks{
+  display:flex;gap:32px;justify-content:center;
+  flex-wrap:wrap;margin-bottom:60px;
+}
+.perk{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:400;color:var(--muted);}
+.perk-dot{width:4px;height:4px;background:var(--gold);border-radius:50%;}
+.form-card{
+  background:var(--black2);
+  border:1px solid rgba(201,154,91,0.1);
+  padding:60px 56px;position:relative;text-align:left;
+}
+.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.f2-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.f2-group{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.f2-label{font-size:9px;font-weight:700;letter-spacing:0.35em;text-transform:uppercase;color:var(--gold);}
+.f2-input,.f2-select,.f2-textarea{
+  background:rgba(255,255,255,0.025);
+  border:1px solid rgba(201,154,91,0.12);
+  color:var(--white);
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:300;
+  padding:15px 20px;outline:none;
+  transition:border-color 0.3s;width:100%;
+}
+.f2-input:focus,.f2-select:focus,.f2-textarea:focus{border-color:var(--gold);background:rgba(201,154,91,0.03);}
+.f2-input::placeholder,.f2-textarea::placeholder{color:var(--muted2);}
+.f2-select option{background:var(--black2);}
+.f2-textarea{resize:vertical;min-height:90px;}
+.f2-submit{
+  background:var(--gold);color:var(--black);
+  font-family:'Inter',sans-serif;font-weight:800;
+  font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
+  padding:20px;width:100%;border:none;cursor:pointer;
+  margin-top:8px;transition:all 0.35s;
+}
+.f2-submit:hover{background:var(--gold2);box-shadow:0 20px 60px rgba(201,154,91,0.25);}
+.f2-note{text-align:center;font-size:11px;font-weight:300;color:var(--muted2);margin-top:18px;letter-spacing:0.04em;}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid rgba(201,154,91,0.07);
+  padding:48px 72px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.foot-left{display:flex;align-items:center;gap:10px;}
+.foot-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;letter-spacing:0.06em;}
+.foot-name span{color:var(--gold);}
+.foot-copy{font-size:11px;font-weight:300;color:var(--muted2);letter-spacing:0.05em;}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 0.75s ease,transform 0.75s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  nav,nav.stuck{padding:18px 28px;}
+  .nav-links{display:none;}
+  #about{grid-template-columns:1fr;padding:80px 28px;gap:50px;}
+  #contrast,#reviews,#contact{padding:80px 28px;}
+  .contrast-item{grid-template-columns:1fr;}
+  .reviews-grid{grid-template-columns:1fr;}
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .f2-row{grid-template-columns:1fr;}
+  .form-card{padding:36px 28px;}
+  footer{flex-direction:column;text-align:center;padding:40px 28px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo">
+    <svg class="logo-mark" viewBox="0 0 40 40" fill="none">
+      <polygon points="20,2 34,14 20,14" fill="#c99a5b" opacity="0.6"/>
+      <polygon points="20,14 34,14 20,32" fill="#c99a5b"/>
+      <rect x="12" y="8" width="16" height="2" fill="#c99a5b" opacity="0.8"/>
+      <rect x="15" y="11.5" width="10" height="1.5" fill="#c99a5b" opacity="0.5"/>
+    </svg>
+    <span class="logo-name">Adl<span>o</span>via</span>
+  </a>
+  <div class="nav-links">
+    <a href="#about" class="nav-link">About</a>
+    <a href="#contrast" class="nav-link">System</a>
+    <a href="#reviews" class="nav-link">Results</a>
+    <a href="#contact" class="nav-link">Contact</a>
+  </div>
+  <a href="#contact" class="nav-btn">Book a Call</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="canvas3d"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag">
+      <div class="tag-dot"></div>
+      The Med-Spa Growth Engine
+    </div>
+    <h1 class="hero-h1">
+      Scale to<br>
+      <span class="em">$100k/mo</span><br>
+      <span class="thin">on Autopilot.</span>
+    </h1>
+    <p class="hero-sub">
+      Adlovia books pre-paid patients onto your calendar using AI-powered ads, premium content, and ruthless ROI tracking. Built exclusively for luxury med-spas.
+    </p>
+    <div class="hero-ctas">
+      <a href="#contact" class="cta-main">Book Your Strategy Call</a>
+      <a href="#about" class="cta-ghost">Discover Adlovia</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-text">Scroll</div>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<!-- ABOUT -->
+<div id="about">
+  <div class="reveal">
+    <div class="sec-tag">About Adlovia</div>
+    <h2 class="sec-h2">We don't run ads.<br>We <em>engineer empires.</em></h2>
+    <p class="about-p">Adlovia is the silent growth partner behind the world's most exclusive med-spas. We fuse cinematic AI content, surgical paid acquisition, and obsessive ROI tracking into one system.</p>
+    <p class="about-p">Engineered to fill your chairs with <strong>high-ticket patients</strong> while you focus on the one thing only you can do: deliver world-class results.</p>
+  </div>
+  <div class="metrics-grid reveal">
+    <div class="metric-box">
+      <div class="metric-num">$0</div>
+      <div class="metric-label">Fee if we don't deliver results. Zero risk.</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-num">AI</div>
+      <div class="metric-label">100% AI-generated content. No shoots.</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-num">0%</div>
+      <div class="metric-label">Camera time required from you, ever.</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-num">Live</div>
+      <div class="metric-label">Real-time ROI dashboard. Always on.</div>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- CONTRAST ENGINE -->
+<div id="contrast">
+  <div class="contrast-header reveal">
+    <div class="sec-tag">The Contrast Engine</div>
+    <h2 class="sec-h2">The problem.<br><em>The solution.</em></h2>
+  </div>
+
+  <!-- 01 -->
+  <div class="contrast-item reveal">
+    <div class="contrast-half problem">
+      <div class="contrast-num">01</div>
+      <span class="contrast-badge prob-badge">The Appointment Problem</span>
+      <h3 class="contrast-title">You're burning ad spend on "leads" but your clinic chairs remain empty.</h3>
+      <p class="contrast-body">Every month, more budget. Every month, the same recycled tire-kickers. Your front desk is exhausted chasing no-shows while your treatment rooms sit silent.</p>
+    </div>
+    <div class="contrast-half solution">
+      <div class="contrast-num">01</div>
+      <span class="contrast-badge sol-badge">The Appointment Solution</span>
+      <h3 class="contrast-title">Guaranteed Pre-Paid Patients.</h3>
+      <p class="contrast-body">We don't deliver clicks. We book paying patients directly onto your calendar — deposits collected, treatments confirmed, ready to be treated. No results, no fee.</p>
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="contrast-item reveal">
+    <div class="contrast-half problem">
+      <div class="contrast-num">02</div>
+      <span class="contrast-badge prob-badge">The Content Burden</span>
+      <h3 class="contrast-title">You're wasting hours filming content instead of treating patients.</h3>
+      <p class="contrast-body">Camera anxiety. Endless takes. Ring lights and reshoots. Every hour behind a phone is an hour of revenue you'll never get back.</p>
+    </div>
+    <div class="contrast-half solution">
+      <div class="contrast-num">02</div>
+      <span class="contrast-badge sol-badge">The Content Solution</span>
+      <h3 class="contrast-title">Zero-Effort AI Content.</h3>
+      <p class="contrast-body">Premium video ads using your custom AI-Clone — without ever stepping in front of a camera. Cinema-grade output, on-brand, on-message, on-demand.</p>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="contrast-item reveal">
+    <div class="contrast-half problem">
+      <div class="contrast-num">03</div>
+      <span class="contrast-badge prob-badge">The Cheap-Lead Trap</span>
+      <h3 class="contrast-title">Low-quality discount-seekers are wasting your team's time.</h3>
+      <p class="contrast-body">Groupon refugees. "Just browsing." Endless quote requests for Botox at $5 a unit. Your closers are burning out on buyers who were never going to buy.</p>
+    </div>
+    <div class="contrast-half solution">
+      <div class="contrast-num">03</div>
+      <span class="contrast-badge sol-badge">The Quality Solution</span>
+      <h3 class="contrast-title">High-Intent Pipeline.</h3>
+      <p class="contrast-body">We target high-ticket treatments — Botox, laser, injectables, body contouring — bringing you buyers, not browsers. Premium leads for premium clinics.</p>
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="contrast-item reveal">
+    <div class="contrast-half problem">
+      <div class="contrast-num">04</div>
+      <span class="contrast-badge prob-badge">The Data Blackout</span>
+      <h3 class="contrast-title">Confusing agency reports that hide your actual profit and ROI.</h3>
+      <p class="contrast-body">Vanity metrics. "Impressions." "Engagement." Pretty charts that look great on a slide deck and tell you nothing about the cash in your bank account.</p>
+    </div>
+    <div class="contrast-half solution">
+      <div class="contrast-num">04</div>
+      <span class="contrast-badge sol-badge">The Data Solution</span>
+      <h3 class="contrast-title">Absolute ROI Clarity.</h3>
+      <p class="contrast-body">Real-time tracking shows exactly how many dollars every ad-spend dollar puts back into your pocket. No spin. No fluff. Just profit.</p>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- REVIEWS -->
+<div id="reviews">
+  <div class="reveal">
+    <div class="sec-tag">Trusted By The Best</div>
+    <h2 class="sec-h2">Reviews from<br><em>elite operators.</em></h2>
+  </div>
+  <div class="reviews-grid">
+    <div class="rev reveal">
+      <div class="rev-stars"><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div></div>
+      <div class="rev-q">"</div>
+      <p class="rev-text">Adlovia booked 47 pre-paid Botox appointments in our first 30 days. Our chairs haven't been empty since.</p>
+      <div class="rev-author">Dr. Camila Reyes</div>
+      <div class="rev-clinic">Lumière Aesthetic, Miami</div>
+      <div class="rev-result">↑ 47 pre-paid bookings · Month 1</div>
+    </div>
+    <div class="rev reveal">
+      <div class="rev-stars"><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div></div>
+      <div class="rev-q">"</div>
+      <p class="rev-text">We replaced our entire in-house marketing team. The AI content alone saves me 15 hours a week and looks more premium than anything we produced ourselves.</p>
+      <div class="rev-author">Olivia Hartwell</div>
+      <div class="rev-clinic">The Hartwell Clinic, London</div>
+      <div class="rev-result">↑ 15 hrs/week saved · 0% camera time</div>
+    </div>
+    <div class="rev reveal">
+      <div class="rev-stars"><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div><div class="rev-star"></div></div>
+      <div class="rev-q">"</div>
+      <p class="rev-text">Finally an agency that speaks profit, not impressions. ROI tripled in 60 days. Genuinely game-changing for our practice.</p>
+      <div class="rev-author">Dr. Marcus Beaumont</div>
+      <div class="rev-clinic">Beaumont Med-Spa, Beverly Hills</div>
+      <div class="rev-result">↑ 3× ROI · First 60 days</div>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- CONTACT -->
+<div id="contact">
+  <div class="sec-tag reveal" style="justify-content:center;">Begin</div>
+  <h2 class="sec-h2 reveal" style="text-align:center;">Ready to fill<br><em>every chair?</em></h2>
+  <p style="font-size:15px;font-weight:300;color:var(--muted);line-height:1.8;max-width:520px;margin:0 auto 28px;" class="reveal">
+    Adlovia accepts a limited number of new med-spa partners each quarter. Submit your details and a senior strategist will reach out within 24 hours to assess fit.
+  </p>
+  <div class="contact-perks reveal">
+    <div class="perk"><div class="perk-dot"></div>Strategy call within 24 hours</div>
+    <div class="perk"><div class="perk-dot"></div>Custom growth audit — no charge</div>
+    <div class="perk"><div class="perk-dot"></div>Zero obligation. Pure clarity.</div>
+  </div>
+
+  <div class="form-card reveal">
+    <div class="f2-row">
+      <div class="f2-group">
+        <label class="f2-label">Name</label>
+        <input class="f2-input" type="text" placeholder="Dr. Sarah Mitchell">
+      </div>
+      <div class="f2-group">
+        <label class="f2-label">Phone</label>
+        <input class="f2-input" type="tel" placeholder="+1 (555) 000-0000">
+      </div>
+    </div>
+    <div class="f2-group">
+      <label class="f2-label">Email</label>
+      <input class="f2-input" type="email" placeholder="you@medspa.com">
+    </div>
+    <div class="f2-group">
+      <label class="f2-label">Med Spa Name</label>
+      <input class="f2-input" type="text" placeholder="Lumière Medical Spa">
+    </div>
+    <div class="f2-group" style="margin-bottom:8px;">
+      <label class="f2-label">Biggest Challenge</label>
+      <textarea class="f2-textarea" placeholder="Tell us what's holding your growth back..."></textarea>
+    </div>
+    <button class="f2-submit" onclick="handleForm(this)">Book My Strategy Call →</button>
+    <p class="f2-note">We'll never share your information. Response within 24 hours.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-left">
+    <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+      <polygon points="20,2 34,14 20,14" fill="#c99a5b" opacity="0.6"/>
+      <polygon points="20,14 34,14 20,32" fill="#c99a5b"/>
+      <rect x="12" y="8" width="16" height="2" fill="#c99a5b" opacity="0.8"/>
+      <rect x="15" y="11.5" width="10" height="1.5" fill="#c99a5b" opacity="0.5"/>
+    </svg>
+    <span class="foot-name">Adl<span>o</span>via</span>
+  </div>
+  <span class="foot-copy">© 2026 Adlovia · Engineered for excellence</span>
+</footer>
+
+<script>
+// Nav scroll
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('stuck',scrollY>50);
+});
+
+// Reveal
+const ro=new IntersectionObserver((entries)=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('in'),i*100);
+      ro.unobserve(e.target);
+    }
+  });
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// Form
+function handleForm(btn){
+  btn.textContent='Sending...';
+  btn.style.opacity='0.6';
+  setTimeout(()=>{
+    btn.textContent='✓ Received — We\'ll contact you within 24 hours';
+    btn.style.background='#5eead4';
+    btn.style.color='#08080c';
+    btn.style.opacity='1';
+  },1400);
+}
+
+// ── THREE.JS FLOATING 3D SPA ELEMENTS ──
+window.addEventListener('load',()=>{
+  const canvas=document.getElementById('canvas3d');
+  const W=window.innerWidth, H=window.innerHeight;
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(W,H);
+
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(55,W/H,0.1,100);
+  cam.position.z=7;
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff,0.4));
+  const pt1=new THREE.PointLight(0xc99a5b,4,20);
+  pt1.position.set(4,3,5); scene.add(pt1);
+  const pt2=new THREE.PointLight(0xe4bc80,2,15);
+  pt2.position.set(-5,-2,3); scene.add(pt2);
+  const pt3=new THREE.PointLight(0xffffff,1,10);
+  pt3.position.set(0,5,2); scene.add(pt3);
+
+  // Gold material factory
+  const gMat=(op=1)=>new THREE.MeshStandardMaterial({
+    color:0xc99a5b,metalness:0.85,roughness:0.15,transparent:op<1,opacity:op
+  });
+  const wireMat=new THREE.MeshBasicMaterial({
+    color:0xc99a5b,wireframe:true,transparent:true,opacity:0.08
+  });
+
+  // ── FLOATING OBJECTS ──
+  const objects=[];
+
+  // 1. Large central elegant sphere (like a treatment ball / spa globe)
+  const sphGeo=new THREE.SphereGeometry(1.1,64,64);
+  const sphMesh=new THREE.Mesh(sphGeo,new THREE.MeshStandardMaterial({
+    color:0xc99a5b,metalness:0.9,roughness:0.05,
+    transparent:true,opacity:0.18
+  }));
+  sphMesh.position.set(2.5,0.2,0);
+  scene.add(sphMesh);
+
+  // Wireframe sphere over it
+  const sphWire=new THREE.Mesh(new THREE.SphereGeometry(1.12,24,24),wireMat);
+  sphWire.position.copy(sphMesh.position);
+  scene.add(sphWire);
+
+  // 2. Elegant torus (like a ring / bracelet — spa luxury)
+  const torGeo=new THREE.TorusGeometry(0.75,0.06,24,100);
+  const tor=new THREE.Mesh(torGeo,gMat(0.9));
+  tor.position.set(2.5,0.2,0);
+  tor.rotation.x=Math.PI/2.5;
+  scene.add(tor);
+  objects.push({mesh:tor,rx:0.004,ry:0.007,rz:0.002,floatAmp:0.18,floatSpeed:0.8,phase:0});
+
+  // 3. Second torus tilted — orbital ring
+  const tor2=new THREE.Mesh(
+    new THREE.TorusGeometry(1.5,0.018,16,100),
+    new THREE.MeshBasicMaterial({color:0xc99a5b,transparent:true,opacity:0.12})
+  );
+  tor2.position.set(2.5,0.2,0);
+  tor2.rotation.x=Math.PI/4;
+  tor2.rotation.z=Math.PI/6;
+  scene.add(tor2);
+  objects.push({mesh:tor2,rx:0.001,ry:0.005,rz:0.003,floatAmp:0,floatSpeed:0,phase:0});
+
+  // 4. Faceted gem / diamond shape (like precious stone — luxury spa)
+  const octGeo=new THREE.OctahedronGeometry(0.55,0);
+  const gem=new THREE.Mesh(octGeo,new THREE.MeshStandardMaterial({
+    color:0xc99a5b,metalness:1,roughness:0.0,transparent:true,opacity:0.85
+  }));
+  gem.position.set(-2.8,1.2,0.5);
+  scene.add(gem);
+  objects.push({mesh:gem,rx:0.008,ry:0.012,rz:0.004,floatAmp:0.25,floatSpeed:0.6,phase:1});
+
+  // 5. Small diamond top right
+  const gem2=new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.3,0),
+    new THREE.MeshStandardMaterial({color:0xe8c07a,metalness:1,roughness:0.05,transparent:true,opacity:0.7})
+  );
+  gem2.position.set(3.8,2.2,-0.5);
+  scene.add(gem2);
+  objects.push({mesh:gem2,rx:0.01,ry:0.008,rz:0.006,floatAmp:0.3,floatSpeed:1,phase:2});
+
+  // 6. Cylinder — like a spa treatment vial / serum bottle
+  const cylGeo=new THREE.CylinderGeometry(0.12,0.12,1.0,32);
+  const cyl=new THREE.Mesh(cylGeo,new THREE.MeshStandardMaterial({
+    color:0xc99a5b,metalness:0.9,roughness:0.1,transparent:true,opacity:0.75
+  }));
+  cyl.position.set(-3.2,-1.4,0.8);
+  scene.add(cyl);
+  objects.push({mesh:cyl,rx:0.005,ry:0.009,rz:0.003,floatAmp:0.2,floatSpeed:0.7,phase:3});
+
+  // 7. Thin disc — like a treatment plate
+  const discGeo=new THREE.CylinderGeometry(0.55,0.55,0.04,48);
+  const disc=new THREE.Mesh(discGeo,gMat(0.6));
+  disc.position.set(-1.0,-2.3,0.3);
+  scene.add(disc);
+  objects.push({mesh:disc,rx:0.003,ry:0.01,rz:0.002,floatAmp:0.15,floatSpeed:0.9,phase:4});
+
+  // 8. Sphere small — floating droplet
+  const drop=new THREE.Mesh(
+    new THREE.SphereGeometry(0.22,32,32),
+    new THREE.MeshStandardMaterial({color:0xe4bc80,metalness:0.95,roughness:0.05,transparent:true,opacity:0.8})
+  );
+  drop.position.set(0.8,-2.6,1);
+  scene.add(drop);
+  objects.push({mesh:drop,rx:0.006,ry:0.004,rz:0.008,floatAmp:0.35,floatSpeed:1.2,phase:5});
+
+  // 9. Another drop
+  const drop2=new THREE.Mesh(
+    new THREE.SphereGeometry(0.16,32,32),
+    new THREE.MeshStandardMaterial({color:0xc99a5b,metalness:0.95,roughness:0.05,transparent:true,opacity:0.65})
+  );
+  drop2.position.set(-0.5,2.8,-0.5);
+  scene.add(drop2);
+  objects.push({mesh:drop2,rx:0.005,ry:0.007,rz:0.003,floatAmp:0.28,floatSpeed:0.85,phase:6});
+
+  // Particle field
+  const pCount=120;
+  const pGeo=new THREE.BufferGeometry();
+  const pPos=new Float32Array(pCount*3);
+  for(let i=0;i<pCount;i++){
+    pPos[i*3]=(Math.random()-0.5)*14;
+    pPos[i*3+1]=(Math.random()-0.5)*10;
+    pPos[i*3+2]=(Math.random()-0.5)*8;
+  }
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+  const pMat=new THREE.PointsMaterial({color:0xc99a5b,size:0.025,transparent:true,opacity:0.5});
+  scene.add(new THREE.Points(pGeo,pMat));
+
+  // Mouse
+  let mx=0,my=0;
+  window.addEventListener('mousemove',e=>{
+    mx=(e.clientX/innerWidth-0.5)*0.8;
+    my=(e.clientY/innerHeight-0.5)*0.5;
+  });
+
+  // Resize
+  window.addEventListener('resize',()=>{
+    cam.aspect=innerWidth/innerHeight;
+    cam.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+
+  // Animate
+  let t=0;
+  function tick(){
+    requestAnimationFrame(tick);
+    t+=0.010;
+
+    // Scene mouse tilt
+    scene.rotation.y+=(mx*0.3-scene.rotation.y)*0.04;
+    scene.rotation.x+=(-my*0.2-scene.rotation.x)*0.04;
+
+    // Central sphere + wire
+    sphMesh.rotation.y=t*0.15;
+    sphWire.rotation.y=t*0.2;
+    sphWire.rotation.x=t*0.1;
+    const floatY=Math.sin(t*0.6)*0.12;
+    sphMesh.position.y=0.2+floatY;
+    sphWire.position.y=0.2+floatY;
+
+    // All objects
+    objects.forEach(o=>{
+      o.mesh.rotation.x+=o.rx;
+      o.mesh.rotation.y+=o.ry;
+      o.mesh.rotation.z+=o.rz;
+      if(o.floatAmp>0){
+        const origY=o.mesh.position.y;
+        o.mesh.position.y=o.mesh.position.y+(Math.sin(t*o.floatSpeed+o.phase)*o.floatAmp-
+          Math.sin((t-0.01)*o.floatSpeed+o.phase)*o.floatAmp);
+      }
+    });
+
+    // Light movement
+    pt1.position.x=Math.cos(t*0.4)*5;
+    pt1.position.y=Math.sin(t*0.3)*3;
+
+    renderer.render(scene,cam);
+  }
+  tick();
+});
+</script>
+</body>
+</html>
